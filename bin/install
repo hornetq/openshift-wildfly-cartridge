@@ -26,16 +26,33 @@ popd 1> /dev/null
 username=$(generate_username)
 password=$(generate_password)
 
+cluster_username=HORNETQUSER
+cluster_password=HORNETQPASSWORD
+
 echo "$username" > $OPENSHIFT_WILDFLY_DIR/env/OPENSHIFT_WILDFLY_USERNAME
 echo "$password" > $OPENSHIFT_WILDFLY_DIR/env/OPENSHIFT_WILDFLY_PASSWORD
 
+echo "$cluster_username" > $OPENSHIFT_WILDFLY_DIR/env/OPENSHIFT_WILDFLY_MESSAGING_CLUSTER_USERNAME
+echo "$cluster_password" > $OPENSHIFT_WILDFLY_DIR/env/OPENSHIFT_WILDFLY_MESSAGING_CLUSTER_PASSWORD
+
 $OPENSHIFT_WILDFLY_DIR/bin/add-user.sh --user ${username} --password ${password} --silent --enable
+
+$OPENSHIFT_WILDFLY_DIR/bin/add-user.sh --user ${cluster_username} --password ${cluster_password} -up application-users.properties -r ApplicationRealm --silent --enable
+
+#we need a user for clients on all nodes, saves having to log into each gear each time we add one
+
+$OPENSHIFT_WILDFLY_DIR/bin/add-user.sh --user guest --password guest -up application-users.properties -gp application-roles.properties -g guest -r ApplicationRealm --silent --enable
 
 client_result ""
 client_result "WildFly 8 administrator added.  Please make note of these credentials:"
 client_result ""
 client_result "   Username: $username"
 client_result "   Password: $password"
+client_result "   "
+client_result "   Also added application user for messaging cluster: "
+client_result ""
+client_result "   Username: $cluster_username"
+client_result "   Password: $cluster_password"
 client_result "   "
 client_result "   run 'rhc port-forward $OPENSHIFT_APP_NAME to access the web admin area on port 9990."
 client_result ""
